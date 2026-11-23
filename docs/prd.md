@@ -145,7 +145,7 @@ Fitur yang termasuk dalam ruang lingkup proyek:
 14. Deteksi keterlambatan berdasarkan waktu dan status aktivitas.
 15. Riwayat perubahan jadwal dan Undo.
 16. Penyimpanan data.
-17. Tampilan responsif untuk desktop dan mobile.
+17. Dukungan multi-platform: Web responsif (desktop, tablet, mobile browser) dan Mobile App native (Android & iOS via Expo).
 
 ## 4.2 Out-of-Scope (Tidak Termasuk MVP)
 
@@ -384,10 +384,10 @@ Fitur:
 
 ## 7.5 Compatibility
 
-- Mendukung browser modern.
-- Mendukung tampilan desktop dan mobile.
-- Memiliki fondasi Progressive Web App.
-- Mendukung penggunaan offline untuk data yang telah tersimpan secara lokal, sesuai kemampuan implementasi.
+- Mendukung browser modern (Chrome, Firefox, Safari, Edge).
+- Mendukung tampilan desktop, tablet, dan mobile browser dengan fondasi Progressive Web App.
+- Mendukung aplikasi native mobile untuk sistem operasi Android (versi 10+) dan iOS (versi 15+) menggunakan Expo (React Native).
+- Mendukung penggunaan offline untuk data yang telah tersimpan secara lokal (IndexedDB pada web, AsyncStorage/SQLite pada mobile).
 
 ---
 
@@ -397,17 +397,22 @@ Fitur:
 
 | Bagian | Teknologi | Fungsi |
 |---|---|---|
-| Frontend | React | Membangun antarmuka aplikasi |
-| Styling | Tailwind CSS | Mengelola tampilan dan design system |
-| Programming Language | TypeScript | Menjaga konsistensi tipe data |
+| Frontend Web | React + TypeScript | Membangun antarmuka web responsif |
+| Frontend Mobile | Expo (React Native + TypeScript) | Membangun antarmuka native untuk Android dan iOS |
+| Mobile Navigation | Expo Router | Navigasi berbasis file (file-based routing) pada mobile |
+| Styling Web | Tailwind CSS | Mengelola tampilan web dan design system |
+| Styling Mobile | NativeWind / Tailwind CSS | Mengelola tampilan antarmuka mobile |
+| Programming Language | TypeScript | Menjaga konsistensi tipe data di seluruh platform |
 | Backend Runtime | Node.js | Menjalankan backend |
 | Backend Framework | Express.js | Menyediakan REST API |
 | Database | PostgreSQL | Menyimpan data aplikasi |
 | Authentication | Supabase Auth (opsional) | Autentikasi pengguna |
 | Database Hosting | Supabase (opsional) | Menyediakan layanan PostgreSQL terkelola |
-| Local Storage | IndexedDB | Menyimpan data lokal untuk dukungan offline |
-| PWA | Vite PWA Plugin | Mendukung instalasi aplikasi |
-| Icons | Lucide React | Menyediakan ikon antarmuka |
+| Local Storage Web | IndexedDB | Menyimpan data lokal web untuk dukungan offline |
+| Local Storage Mobile | AsyncStorage / Expo SQLite | Menyimpan data lokal dan antrean offline pada mobile |
+| PWA | Vite PWA Plugin | Mendukung instalasi aplikasi web |
+| Mobile Build & Push | EAS & Expo Notifications | Build platform native dan pengiriman notifikasi mobile |
+| Icons | Lucide React & Lucide React Native | Menyediakan ikon antarmuka yang konsisten |
 
 ## 8.2 Backend Responsibilities
 
@@ -616,16 +621,16 @@ Keakuratan algoritma penjadwalan harus menjadi prioritas sebelum menambahkan fit
 
 # 15. FINAL PRODUCT DEFINITION
 
-ClynSchedule adalah aplikasi Dynamic Time-Blocking & Smart Cascade Scheduler yang membantu pengguna mengelola aktivitas harian secara fleksibel melalui penyesuaian jadwal otomatis.
+ClynSchedule adalah aplikasi Dynamic Time-Blocking & Smart Cascade Scheduler yang membantu pengguna mengelola aktivitas harian secara fleksibel melalui penyesuaian jadwal otomatis, tersedia melalui Web PWA dan aplikasi Mobile native (Android & iOS via Expo).
 
-Fokus utama produk adalah menyelesaikan permasalahan jadwal yang kaku, penyesuaian manual, serta risiko tergesernya aktivitas penting.
+Fokus utama produk adalah menyelesaikan permasalahan jadwal yang kaku, penyesuaian manual, serta risiko tergesernya aktivitas penting di seluruh perangkat pengguna.
 
 Melalui fitur Smart Cascade Engine, Ripple Shift, Compress Duration, dan Fixed Anchor Protection, ClynSchedule memungkinkan pengguna mengelola perubahan aktivitas tanpa harus menyusun ulang seluruh jadwal secara manual.
 
 **Prinsip utama produk:**
 
-"Plan your day. Adapt to changes. Stay on track."
+"Plan your day. Adapt to changes. Stay on track across web and mobile."
 
 ---
 
-**END OF DOCUMENT — ClynSchedule PRD v1.0**
+**END OF DOCUMENT — ClynSchedule PRD v1.1**

@@ -310,13 +310,15 @@ Header berisi:
 - Grid menyesuaikan lebar layar.
 - Kartu aktivitas tetap mudah dibaca.
 
-### Mobile
+### Mobile (Web Responsive & Native Expo)
 
-- Navigasi menggunakan bottom navigation.
-- Konten ditampilkan dalam satu kolom.
-- Timeline menggunakan layout vertikal.
-- Tombol utama mudah dijangkau dengan ibu jari.
-- Modal aktivitas menggunakan bottom sheet atau full-screen dialog jika diperlukan.
+- Navigasi menggunakan bottom navigation bar (Bottom Tabs pada Expo Router).
+- Konten ditampilkan dalam satu kolom vertikal yang efisien.
+- Timeline menggunakan layout vertikal dengan indikator waktu real-time.
+- Tombol aksi utama (Start Now, Re-align, Add) mudah dijangkau dengan ibu jari (thumb-zone friendly).
+- Modal aktivitas dan Cascade Preview menggunakan bottom sheet interaktif yang dapat di-swipe atau full-screen modal.
+- Safe Area terkelola baik di iOS (Dynamic Island / Notch / Home Indicator) dan Android (Edge-to-edge system bars) menggunakan `react-native-safe-area-context`.
+- Respon sentuhan dilengkapi haptic feedback (`expo-haptics`) untuk konfirmasi aksi penting.
 
 ---
 
@@ -717,15 +719,17 @@ Gunakan breakpoint Tailwind CSS:
 | Desktop | >= 1024px |
 | Large Desktop | >= 1280px |
 
-## 9.2 Mobile Guidelines
+## 9.2 Mobile Guidelines (Web PWA & Native Expo)
 
-- Gunakan satu kolom.
-- Bottom navigation sebagai navigasi utama.
-- Activity Card harus mudah disentuh.
-- Gunakan ukuran tombol yang nyaman.
-- Hindari tabel lebar.
-- Cascade Preview harus dapat dibaca tanpa horizontal scrolling.
-- Modal dapat berubah menjadi bottom sheet atau full-screen.
+- Gunakan layout satu kolom vertikal yang bersih.
+- Bottom navigation (Bottom Tabs pada Expo Router) sebagai navigasi utama antar fitur.
+- Activity Card harus memiliki target sentuh yang nyaman (minimum 44x44 pt).
+- Gunakan ukuran tombol yang proporsional dan mudah ditekan dengan satu tangan.
+- Hindari tabel lebar atau horizontal scroll yang tidak disengaja.
+- Cascade Preview harus dapat dibaca dan dievaluasi tanpa horizontal scrolling.
+- Modal formulir aktivitas menggunakan bottom sheet yang dapat digeser atau full-screen modal.
+- Integrasikan Pull-to-Refresh (`RefreshControl` di Expo) pada Timeline dan Dashboard untuk memuat ulang jadwal.
+- Terapkan getaran haptic halus (`expo-haptics`) ketika status aktivitas berganti (Start/Complete/Skip/Re-align).
 
 ## 9.3 Desktop Guidelines
 

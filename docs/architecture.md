@@ -62,22 +62,38 @@ Seluruh arsitektur ClynSchedule harus mengikuti prinsip berikut:
 
 # 2. TECHNOLOGY STACK
 
-## 2.1 Frontend
+## 2.1 Web Frontend
 
 | Teknologi | Fungsi |
 |---|---|
-| React | Library untuk membangun antarmuka |
+| React | Library untuk membangun antarmuka web |
 | TypeScript | Bahasa pemrograman dengan sistem tipe |
 | Vite | Development server dan build tool |
 | Tailwind CSS | Styling dan design system |
-| Lucide React | Ikon antarmuka |
-| React Router | Navigasi halaman |
+| Lucide React | Ikon antarmuka web |
+| React Router | Navigasi halaman web |
 | TanStack Query | Pengelolaan server state dan cache API |
 | Zustand | Pengelolaan client state |
 | IndexedDB | Penyimpanan data lokal |
 | vite-plugin-pwa | Dukungan Progressive Web App |
 
-## 2.2 Backend
+## 2.2 Mobile Frontend (Expo)
+
+| Teknologi | Fungsi |
+|---|---|
+| React Native | Framework aplikasi mobile cross-platform (Android & iOS) |
+| Expo | Platform dan ecosystem toolchain untuk React Native |
+| TypeScript | Bahasa pemrograman dengan sistem tipe |
+| Expo Router | Navigasi berbasis file (file-based routing) |
+| NativeWind / Tailwind CSS | Styling antarmuka mobile berbasis utility classes |
+| Lucide React Native | Ikon antarmuka mobile |
+| TanStack Query | Pengelolaan server state dan cache API |
+| Zustand | Pengelolaan client state |
+| AsyncStorage / Expo SQLite | Penyimpanan data lokal dan cache offline di perangkat mobile |
+| Expo Notifications | Notifikasi lokal dan push notification perangkat mobile |
+| Expo Haptics | Respon getaran haptic untuk aksi pengguna |
+
+## 2.3 Backend
 
 | Teknologi | Fungsi |
 |---|---|
@@ -90,26 +106,30 @@ Seluruh arsitektur ClynSchedule harus mengikuti prinsip berikut:
 | Pino | Logging aplikasi |
 | Vitest | Unit dan integration testing |
 
-## 2.3 Infrastructure
+## 2.4 Infrastructure
 
 | Teknologi | Fungsi |
 |---|---|
 | Supabase | Hosting PostgreSQL dan layanan autentikasi opsional |
-| IndexedDB | Penyimpanan lokal |
-| Service Worker | Cache aplikasi dan dukungan offline |
+| IndexedDB & AsyncStorage | Penyimpanan lokal web dan mobile |
+| Service Worker | Cache aplikasi dan dukungan offline pada web |
+| Expo Application Services (EAS) | Build, deployment, dan update aplikasi mobile |
+| Expo Push Service | Layanan pengiriman notifikasi push ke perangkat mobile |
 | Web Notifications | Menampilkan notifikasi browser |
 | Web Push API | Pengiriman notifikasi push jika diperlukan |
 
-## 2.4 Technology Decision
+## 2.5 Technology Decision
 
 ClynSchedule menggunakan kombinasi teknologi di atas dengan alasan:
 
-- React memudahkan pengembangan komponen antarmuka yang dapat digunakan kembali.
-- TypeScript membantu mengurangi kesalahan tipe data.
+- React memudahkan pengembangan komponen antarmuka web yang dapat digunakan kembali.
+- React Native dengan Expo memungkinkan pengembangan satu basis kode mobile untuk Android dan iOS dengan akses API native yang kaya (notifikasi, haptic, storage) tanpa overhead konfigurasi native manual yang kompleks.
+- TypeScript digunakan di seluruh layer (Web, Mobile, Backend) untuk konsistensi tipe data dan kemudahan berbagi kontrak skema.
+- Expo Router menyederhanakan arsitektur navigasi mobile dengan konsep file-based routing yang selaras dengan mental model pengembangan modern.
 - Express.js menyediakan struktur backend yang sederhana dan fleksibel.
 - PostgreSQL mendukung relasi data dan transaksi yang dibutuhkan penjadwalan.
 - Prisma membantu pengelolaan database dan migration.
-- IndexedDB mendukung penyimpanan lokal.
+- IndexedDB (Web) dan AsyncStorage / Expo SQLite (Mobile) mendukung penyimpanan lokal untuk reliabilitas offline.
 - Supabase dapat digunakan untuk mengurangi kompleksitas pengelolaan infrastruktur database dan autentikasi.
 
 Redis, BullMQ, dan AI API tidak menjadi dependensi MVP.
@@ -124,12 +144,20 @@ Redis, BullMQ, dan AI API tidak menjadi dependensi MVP.
 flowchart TB
     U[User]
 
-    subgraph CLIENT["Frontend - React PWA"]
-        UI[User Interface]
-        STATE[State Management]
-        API_CLIENT[API Client]
-        LOCAL[IndexedDB]
+    subgraph CLIENT_WEB["Frontend Web - React PWA"]
+        UI_W[User Interface Web]
+        STATE_W[State Management]
+        API_W[API Client Web]
+        LOCAL_W[IndexedDB]
         SW[Service Worker]
+    end
+
+    subgraph CLIENT_MOB["Frontend Mobile - Expo (React Native)"]
+        UI_M[User Interface Native]
+        STATE_M[State Management]
+        API_M[API Client Mobile]
+        LOCAL_M[AsyncStorage / SQLite]
+        NOTIF_M[Expo Notifications]
     end
 
     subgraph SERVER["Backend - Node.js + Express"]
@@ -143,15 +171,25 @@ flowchart TB
     end
 
     DB[(PostgreSQL)]
-    PUSH[Web Push Service]
+    PUSH_WEB[Web Push Service]
+    PUSH_EXPO[Expo Push Service]
 
-    U --> UI
-    UI --> STATE
-    STATE --> API_CLIENT
-    STATE <--> LOCAL
-    SW --> UI
+    U --> UI_W
+    U --> UI_M
 
-    API_CLIENT <--> API
+    UI_W --> STATE_W
+    STATE_W --> API_W
+    STATE_W <--> LOCAL_W
+    SW --> UI_W
+
+    UI_M --> STATE_M
+    STATE_M --> API_M
+    STATE_M <--> LOCAL_M
+    NOTIF_M --> UI_M
+
+    API_W <--> API
+    API_M <--> API
+
     API --> AUTH
     AUTH --> ACTIVITY
     AUTH --> SCHEDULE
@@ -163,22 +201,24 @@ flowchart TB
     HISTORY --> DB
 
     REMINDER --> DB
-    REMINDER --> PUSH
-    PUSH --> SW
+    REMINDER --> PUSH_WEB
+    REMINDER --> PUSH_EXPO
+    PUSH_WEB --> SW
+    PUSH_EXPO --> NOTIF_M
 ```
 
 ## 3.2 Architecture Layers
 
 ### Presentation Layer
 
-Berada pada frontend dan bertanggung jawab terhadap:
+Berada pada client (Frontend Web React dan Mobile Expo) dan bertanggung jawab terhadap:
 
-- Menampilkan dashboard.
-- Menampilkan timeline.
+- Menampilkan dashboard dan daily timeline.
 - Menampilkan formulir aktivitas.
-- Mengelola interaksi pengguna.
-- Menampilkan notifikasi dan pesan kesalahan.
-- Mengirim permintaan ke backend.
+- Mengelola interaksi pengguna (gestur sentuhan pada mobile, klik/drag pada web).
+- Menampilkan notifikasi lokal dan pesan kesalahan.
+- Memberikan haptic feedback pada mobile untuk konfirmasi aksi jadwal.
+- Mengirim permintaan ke backend melalui API client.
 
 ### Application Layer
 
@@ -215,36 +255,37 @@ Bertanggung jawab terhadap:
 
 ---
 
-# 4. FRONTEND ARCHITECTURE
+# 4. CLIENT ARCHITECTURE (WEB & MOBILE)
 
-## 4.1 Frontend Responsibilities
+## 4.1 Client Responsibilities
 
-Frontend bertanggung jawab untuk:
+Aplikasi client ClynSchedule hadir dalam dua platform: **Web Client (React PWA)** dan **Mobile Client (Expo / React Native)**. Keduanya berbagi kontrak API dan struktur model data yang sama.
 
-1. Menampilkan jadwal harian.
-2. Mengelola interaksi pengguna.
-3. Menampilkan status aktivitas.
-4. Menyediakan formulir aktivitas.
-5. Mengirim perintah penjadwalan ke backend.
-6. Menampilkan hasil Smart Cascade.
-7. Mengelola cache dan penyimpanan lokal.
-8. Menyediakan pengalaman PWA.
+Tanggung jawab client:
 
-Frontend tidak boleh menjadi satu-satunya tempat penyimpanan aturan bisnis Smart Cascade.
+1. Menampilkan jadwal harian dan visualisasi timeline waktu.
+2. Mengelola interaksi pengguna (touch gesture, tap, drag pada web).
+3. Menampilkan status aktivitas (idle, in-progress, completed, delayed).
+4. Menyediakan formulir pembuatan dan pembaruan aktivitas.
+5. Mengirim perintah penjadwalan ke backend REST API.
+6. Menampilkan pratinjau perubahan jadwal hasil Smart Cascade sebelum disetujui.
+7. Mengelola cache dan penyimpanan lokal (IndexedDB pada Web, AsyncStorage/SQLite pada Mobile).
+8. Menyediakan pengalaman offline dan notifikasi (PWA Service Worker pada Web, Expo Notifications pada Mobile).
 
-Perhitungan jadwal yang bersifat otoritatif harus dilakukan dan divalidasi oleh backend.
+Frontend Web maupun Mobile tidak boleh menjadi satu-satunya tempat penyimpanan aturan bisnis Smart Cascade. Perhitungan jadwal yang bersifat otoritatif harus dilakukan dan divalidasi oleh backend.
 
-## 4.2 Frontend Folder Structure
+## 4.2 Web Folder Structure
+
+Struktur direktori aplikasi web berbasis React + Vite (`web/`):
 
 ```text
-frontend/
+web/
 ├── public/
 │   ├── icons/
 │   └── manifest.webmanifest
 │
 ├── src/
 │   ├── assets/
-│   │
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── layout/
@@ -283,37 +324,84 @@ frontend/
 └── package.json
 ```
 
-## 4.3 Component Responsibilities
+## 4.3 Mobile Folder Structure (Expo)
 
-| Komponen | Tanggung Jawab |
-|---|---|
-| Dashboard | Ringkasan jadwal harian |
-| DailyTimeline | Visualisasi aktivitas berdasarkan waktu |
-| ActivityCard | Informasi setiap aktivitas |
-| ActivityForm | Membuat dan mengubah aktivitas |
-| ActivityTimer | Menampilkan waktu aktivitas berjalan |
-| CascadePreview | Menampilkan perubahan jadwal sebelum diterapkan |
-| AnchorBadge | Menandai aktivitas Fixed Anchor |
-| ScheduleModeSelector | Memilih Ripple Shift atau Compress Duration |
-| ConflictAlert | Menampilkan konflik jadwal |
-| HistoryPanel | Menampilkan riwayat perubahan |
+Struktur direktori aplikasi mobile berbasis React Native dengan Expo dan Expo Router (`mobile/`):
 
-## 4.4 State Management
+```text
+mobile/
+├── app/
+│   ├── (tabs)/
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx               # Mobile Dashboard
+│   │   ├── schedule.tsx            # Daily Timeline
+│   │   ├── history.tsx             # History & Undo Log
+│   │   └── settings.tsx            # Settings & Preferences
+│   │
+│   ├── activity/
+│   │   ├── [id].tsx                # Detail & Edit Activity
+│   │   └── create.tsx              # Create Activity Modal/Screen
+│   │
+│   ├── cascade-preview.tsx         # Modal Pratinjau Smart Cascade
+│   └── _layout.tsx                 # Root layout & providers
+│
+├── assets/
+│   ├── icon.png
+│   ├── splash.png
+│   └── adaptive-icon.png
+│
+├── src/
+│   ├── components/
+│   │   ├── ui/                     # Native primitive components (Button, Input, Card)
+│   │   ├── layout/                 # ScreenContainer, Header, SafeView
+│   │   ├── timeline/               # NativeDailyTimeline, TimelineRuler
+│   │   ├── activity/               # NativeActivityCard, TimerWidget, AnchorBadge
+│   │   └── scheduling/             # ModeSelector, ConflictBanner
+│   │
+│   ├── hooks/                      # Custom hooks (useTimer, useCascade, useNetworkStatus)
+│   ├── services/
+│   │   ├── api.ts                  # Axios/Fetch client ke backend API
+│   │   ├── activityService.ts      # CRUD aktivitas
+│   │   ├── scheduleService.ts      # Eksekusi cascade & trigger
+│   │   └── notificationService.ts  # Expo Notifications & permissions
+│   │
+│   ├── stores/                     # Zustand stores (useActiveActivityStore, useUIStore)
+│   ├── storage/                    # AsyncStorage / Expo SQLite offline persistence
+│   ├── types/                      # Domain & API TypeScript interfaces
+│   ├── utils/                      # Time calculations & formatting
+│   └── constants/                  # Colors, Design tokens, Endpoints
+│
+├── app.json                        # Konfigurasi Expo & EAS
+├── babel.config.js
+├── tailwind.config.js              # NativeWind configuration
+├── tsconfig.json
+└── package.json
+```
 
-Zustand digunakan untuk client state, seperti:
+## 4.4 Component Responsibilities (Web & Mobile)
 
-- Aktivitas yang sedang dipilih.
-- Aktivitas yang sedang berjalan.
-- Mode tampilan.
-- Status modal.
-- Preferensi UI.
+| Komponen Web | Komponen Mobile (Expo) | Tanggung Jawab |
+|---|---|---|
+| Dashboard | DashboardScreen (`index.tsx`) | Ringkasan jadwal harian dan aktivitas aktif |
+| DailyTimeline | NativeDailyTimeline | Visualisasi timeline berbasis waktu (vertikal pada mobile) |
+| ActivityCard | NativeActivityCard | Menampilkan info aktivitas, status badge, dan countdown |
+| ActivityForm | ActivityModal / Screen | Membuat dan memperbarui data aktivitas |
+| ActivityTimer | NativeActivityTimer | Menghitung waktu aktivitas berjalan secara realtime |
+| CascadePreview | CascadePreviewModal | Pratinjau pergeseran jadwal sebelum dieksekusi |
+| AnchorBadge | AnchorBadge | Visual penanda Fixed Anchor block |
+| ScheduleModeSelector | ModeSegmentedControl | Memilih mode Ripple Shift atau Compress Duration |
+| ConflictAlert | ConflictBanner / Toast | Menampilkan peringatan benturan jadwal |
+| HistoryPanel | HistoryScreen (`history.tsx`) | Menampilkan riwayat perubahan dan tombol Undo |
 
-TanStack Query digunakan untuk server state, seperti:
+## 4.5 State Management & Storage Strategy
 
-- Daftar aktivitas.
-- Jadwal harian.
-- Riwayat perubahan.
-- Preferensi yang tersimpan di backend.
+- **Client State (Zustand):**
+  - Digunakan identik baik di Web maupun Mobile untuk mengelola UI state lokal: aktivitas yang sedang berjalan, timer status, filter visual, dan modal/bottom sheet state.
+- **Server State (TanStack Query):**
+  - Digunakan di Web dan Mobile untuk fetching, caching, deduplikasi, dan background revalidation data aktivitas serta riwayat jadwal dari backend.
+- **Persistent Local Storage:**
+  - **Web:** IndexedDB digunakan untuk menyimpan cache aktivitas dan antrean offline PWA.
+  - **Mobile:** AsyncStorage untuk data preferensi/auth token, dan Expo SQLite / AsyncStorage untuk cache aktivitas lokal dan antrean mutasi offline.
 
 Data server tidak boleh diduplikasi secara tidak terkendali pada beberapa state global.
 
@@ -791,36 +879,38 @@ Untuk MVP:
 
 # 10. LOCAL STORAGE & OFFLINE ARCHITECTURE
 
-## 10.1 IndexedDB
+## 10.1 Storage Solution (Web & Mobile)
 
-IndexedDB digunakan untuk menyimpan:
-
-- Cache aktivitas.
-- Jadwal harian yang telah dimuat.
-- Preferensi tampilan.
-- Data sementara untuk dukungan offline.
+- **Web (IndexedDB):**
+  - Cache aktivitas dan timeline harian yang telah dimuat.
+  - Preferensi tampilan dan status UI.
+  - Data sementara untuk dukungan offline PWA.
+- **Mobile (AsyncStorage & Expo SQLite):**
+  - **AsyncStorage:** Menyimpan token autentikasi, pengaturan pengguna, preferensi tema, dan cache snapshot jadwal ringan.
+  - **Expo SQLite:** Menyimpan replika lokal aktivitas dan antrean mutasi (offline mutation queue) saat perangkat offline.
 
 ## 10.2 Offline Behavior
 
 Ketika tidak tersedia koneksi internet:
 
-- Pengguna dapat melihat jadwal yang sebelumnya tersimpan.
-- Pengguna dapat melihat informasi aktivitas yang tersedia secara lokal.
-- Perubahan offline dapat disimpan sebagai operasi tertunda jika mekanisme antrean telah diimplementasikan.
-- Sistem tidak boleh menganggap perubahan lokal sudah tersinkronisasi dengan server.
+- Pengguna web maupun mobile dapat melihat jadwal yang sebelumnya tersimpan secara lokal.
+- Pengguna dapat melihat informasi aktivitas yang tersedia di cache.
+- Perubahan offline dapat disimpan sebagai operasi tertunda ke antrean lokal jika mekanisme offline queue aktif.
+- Indikator status jaringan (online/offline) ditampilkan di antarmuka.
+- Sistem tidak boleh menganggap perubahan lokal sudah tersinkronisasi dengan server sebelum backend memberikan konfirmasi.
 
 ## 10.3 Synchronization
 
 Saat koneksi kembali tersedia:
 
-1. Sistem memeriksa operasi lokal yang tertunda.
-2. Sistem memeriksa versi data server.
-3. Sistem mengirim perubahan yang masih valid.
-4. Backend melakukan validasi ulang.
-5. Konflik sinkronisasi harus dilaporkan.
-6. Data lokal diperbarui berdasarkan respons server.
+1. Sistem memeriksa operasi lokal yang tertunda di IndexedDB atau SQLite/AsyncStorage.
+2. Sistem memeriksa versi data server (optimistic concurrency check).
+3. Sistem mengirim perubahan yang masih valid secara berurutan.
+4. Backend melakukan validasi ulang terhadap aturan Smart Cascade dan batas waktu.
+5. Konflik sinkronisasi dilaporkan kepada pengguna untuk konfirmasi.
+6. Data lokal diperbarui berdasarkan respons resmi server.
 
-Untuk MVP, dukungan offline dapat dimulai dengan mode baca terhadap data yang sudah tersimpan. Sinkronisasi dua arah penuh tidak wajib tersedia pada tahap pertama.
+Untuk MVP, dukungan offline dapat dimulai dengan mode baca (read-only) terhadap data yang sudah tersimpan. Sinkronisasi dua arah penuh dapat ditingkatkan secara bertahap.
 
 ---
 
@@ -829,36 +919,53 @@ Untuk MVP, dukungan offline dapat dimulai dengan mode baca terhadap data yang su
 ## 11.1 Notification Types
 
 - Activity Starting Reminder.
-- Upcoming Activity Reminder.
-- Activity Delay Reminder.
-- Schedule Change Notification.
+- Upcoming Activity Reminder (misal 5-15 menit sebelum mulai).
+- Activity Delay Reminder (saat aktivitas melebihi batas durasi).
+- Schedule Change Notification (hasil pergeseran Smart Cascade).
 
-## 11.2 Notification Flow
+## 11.2 Notification Architecture (Web & Mobile)
 
 ```mermaid
 flowchart TD
     A[Reminder Configuration]
-    B[Reminder Service]
+    B[Reminder Service Backend]
     C[Check Due Activities]
     D{Reminder Due?}
-    E[Create Notification]
-    F[Send Web Push]
-    G[Service Worker]
-    H[Display Notification]
+    E[Create Notification Event]
+
+    subgraph WEB["Web Delivery"]
+        F1[Web Push Service]
+        G1[Service Worker]
+        H1[Browser Notification]
+    end
+
+    subgraph MOBILE["Mobile Delivery (Expo)"]
+        F2[Expo Push Service API]
+        G2[expo-notifications Client]
+        H2[Native System Notification & Sound]
+    end
 
     A --> B --> C --> D
-    D -->|Yes| E --> F --> G --> H
+    D -->|Yes| E
+    E --> F1 --> G1 --> H1
+    E --> F2 --> G2 --> H2
     D -->|No| C
 ```
 
-## 11.3 Notification Limitations
+## 11.3 Mobile Local Scheduling vs Remote Push
 
-- Browser Notification membutuhkan izin pengguna.
-- Web Push memerlukan konfigurasi push subscription dan server pengirim.
-- Service Worker tidak boleh dianggap sebagai timer yang selalu berjalan ketika browser ditutup.
-- Pengingat yang harus tetap berjalan ketika aplikasi tidak aktif memerlukan mekanisme server-side scheduling dan push delivery.
+Pada aplikasi mobile berbasis Expo, pengingat memiliki keandalan tinggi melalui dua metode:
+1. **Local Scheduled Notifications (`expo-notifications`):**
+   - Jadwal pengingat aktivitas yang telah ditentukan dijadwalkan langsung pada sistem operasi (Android AlarmManager / iOS Notification Center).
+   - Pengingat tetap menyala dan bersuara tepat waktu meskipun aplikasi sedang ditutup atau tanpa koneksi internet.
+2. **Remote Push Notifications (Expo Push Service):**
+   - Digunakan ketika backend memicu perubahan jadwal mendadak, notifikasi darurat, atau penyesuaian lintas perangkat.
 
-Pengiriman notifikasi yang andal di latar belakang merupakan bagian pengembangan lanjutan.
+## 11.4 Notification Limitations
+
+- Browser Web Notification membutuhkan izin pengguna dan Service Worker memiliki keterbatasan jika browser ditutup penuh.
+- Mobile Push memerlukan izin notifikasi sistem (Notification Permission) dan registrasi Expo Push Token ke backend.
+- Pengingat yang harus tetap berjalan ketika aplikasi tidak aktif memerlukan kombinasi local alarm scheduling dan remote push delivery.
 
 ---
 
@@ -943,39 +1050,41 @@ Menguji fungsi yang terpisah.
 
 Fokus:
 
-- Ripple Shift.
-- Compress Duration.
-- Fixed Anchor Protection.
+- Ripple Shift algorithm.
+- Compress Duration algorithm.
+- Fixed Anchor Protection logic.
 - Conflict Detection.
-- Time Calculation.
+- Time Calculation (minutes, slot offset, timezone).
 - Activity Status Validation.
+- Utility functions pada Web dan Mobile.
 
-## 14.2 Integration Testing
+## 14.2 Integration & Component Testing
 
-Menguji komunikasi antar modul.
+Menguji komunikasi antar modul dan rendering komponen antarmuka.
 
 Fokus:
 
-- Activity API.
-- Scheduling API.
-- Database Transaction.
-- History Recording.
+- Activity API dan Scheduling API di backend.
+- Database Transaction & rollback test.
+- History Recording & Undo flow.
 - Authentication Middleware.
+- React Testing Library untuk komponen Web UI.
+- React Native Testing Library (RNTL) untuk komponen Mobile Expo (DashboardScreen, Timeline, ActivityCard).
 
 ## 14.3 End-to-End Testing
 
-Menguji alur penggunaan dari sisi pengguna.
+Menguji alur penggunaan dari sisi pengguna pada browser dan simulator mobile.
 
 Skenario:
 
-1. Membuat aktivitas.
-2. Memulai aktivitas.
-3. Mengalami keterlambatan.
+1. Membuat aktivitas baru (flexible & fixed anchor).
+2. Memulai aktivitas (Start Now).
+3. Mengalami keterlambatan aktivitas.
 4. Melakukan Re-align Now.
-5. Menjalankan Ripple Shift.
-6. Memastikan Fixed Anchor tidak berubah.
-7. Menyelesaikan aktivitas.
-8. Memastikan perubahan tersimpan.
+5. Menjalankan simulasi Cascade Preview (Ripple Shift / Compress Duration).
+6. Memastikan Fixed Anchor tidak berubah posisi atau terpotong.
+7. Menyelesaikan aktivitas (Complete) dan memeriksa rekaman history.
+8. Memastikan perubahan data tersinkronisasi ke server.
 
 ## 14.4 Critical Test Cases
 
@@ -984,13 +1093,13 @@ Smart Cascade tidak boleh dinyatakan siap sebelum skenario berikut diuji:
 - Keterlambatan aktivitas selama 15 menit.
 - Keterlambatan aktivitas selama 60 menit.
 - Aktivitas selesai lebih cepat.
-- Aktivitas dilewati.
+- Aktivitas dilewati (Skip).
 - Aktivitas fleksibel sebelum Fixed Anchor.
 - Aktivitas fleksibel setelah Fixed Anchor.
-- Durasi minimum telah tercapai.
-- Tidak ada waktu tersisa untuk penyesuaian.
-- Dua aktivitas mengalami benturan.
-- Dua request cascade dikirim secara bersamaan.
+- Durasi minimum telah tercapai saat kompresi.
+- Tidak ada waktu tersisa untuk penyesuaian (Hard Conflict).
+- Dua aktivitas mengalami benturan jadwal.
+- Dua request cascade dikirim secara bersamaan (Concurrency test).
 
 ---
 
@@ -998,15 +1107,24 @@ Smart Cascade tidak boleh dinyatakan siap sebelum skenario berikut diuji:
 
 ## 15.1 Development Environment
 
-Frontend:
+Web Frontend:
 
 ```bash
+cd web
 npm run dev
+```
+
+Mobile Frontend (Expo):
+
+```bash
+cd mobile
+npx expo start
 ```
 
 Backend:
 
 ```bash
+cd backend
 npm run dev
 ```
 
@@ -1018,13 +1136,13 @@ Database:
 
 Komponen deployment:
 
-- Frontend: Static hosting yang mendukung aplikasi Vite.
-- Backend: Node.js hosting.
-- Database: PostgreSQL managed hosting.
-- PWA: HTTPS dan Service Worker.
-- Environment: Environment variables yang aman.
+- **Web Frontend:** Static hosting (Vercel, Netlify, Cloudflare Pages) dengan konfigurasi SPA & PWA.
+- **Mobile Frontend (Expo):** EAS Build untuk menghasilkan binary Android (`.apk`/`.aab`) dan iOS (`.ipa`), serta EAS Update untuk over-the-air update.
+- **Backend:** Node.js hosting (Render, Railway, Fly.io, VPS) dengan process manager.
+- **Database:** PostgreSQL managed hosting (Supabase / AWS RDS).
+- **Environment:** Environment variables yang aman dan terisolasi.
 
-Frontend dan backend dapat di-deploy secara terpisah selama konfigurasi API dan CORS sudah benar.
+Web, mobile, dan backend dapat di-deploy secara independen dengan mengacu pada REST API contract yang sama.
 
 ## 15.3 Environment Separation
 
@@ -1044,16 +1162,17 @@ Keputusan arsitektur berikut menjadi acuan awal proyek.
 
 | ID | Keputusan | Alasan |
 |---|---|---|
-| ADR-001 | React + TypeScript | UI modular dan type safety |
-| ADR-002 | Node.js + Express.js | Backend sederhana dan fleksibel |
+| ADR-001 | React + TypeScript | UI web modular dan type safety |
+| ADR-002 | Node.js + Express.js | Backend sederhana, cepat, dan fleksibel |
 | ADR-003 | Modular Monolith | Menghindari kompleksitas microservices pada MVP |
-| ADR-004 | PostgreSQL | Relasi data dan transaksi yang kuat |
-| ADR-005 | Prisma ORM | Pengelolaan query dan migration |
-| ADR-006 | Smart Cascade di backend | Konsistensi aturan penjadwalan |
-| ADR-007 | IndexedDB | Dukungan penyimpanan lokal |
-| ADR-008 | Fixed Anchor Protection | Melindungi aktivitas penting |
-| ADR-009 | Integer minutes untuk perhitungan harian | Mempermudah kalkulasi jadwal |
-| ADR-010 | REST API | Komunikasi frontend dan backend yang sederhana |
+| ADR-004 | PostgreSQL | Relasi data dan transaksi yang kuat untuk penjadwalan |
+| ADR-005 | Prisma ORM | Pengelolaan query type-safe dan migration terstruktur |
+| ADR-006 | Smart Cascade di backend | Konsistensi aturan dan validasi penjadwalan otoritatif |
+| ADR-007 | IndexedDB & AsyncStorage | Dukungan penyimpanan lokal dan offline untuk web dan mobile |
+| ADR-008 | Fixed Anchor Protection | Melindungi aktivitas berjadwal pasti agar tidak bergeser otomatis |
+| ADR-009 | Integer minutes untuk perhitungan harian | Mempermudah kalkulasi jadwal dan menghindari masalah floating point |
+| ADR-010 | REST API | Komunikasi client dan server yang sederhana dan terstandardisasi |
+| ADR-011 | Expo (React Native) untuk Mobile | Satu basis kode TypeScript untuk Android & iOS, navigasi file-based dengan Expo Router, akses notifikasi & haptic native, serta build terkelola dengan EAS |
 
 Perubahan keputusan arsitektur harus memiliki alasan teknis yang jelas dan memperbarui dokumen ini.
 
@@ -1063,8 +1182,8 @@ Perubahan keputusan arsitektur harus memiliki alasan teknis yang jelas dan mempe
 
 Seluruh implementasi harus mematuhi batasan berikut:
 
-1. Jangan memindahkan Smart Cascade Engine sepenuhnya ke frontend.
-2. Jangan mencampurkan business logic ke dalam React components.
+1. Jangan memindahkan Smart Cascade Engine sepenuhnya ke frontend atau client mobile.
+2. Jangan mencampurkan business logic ke dalam React / React Native components.
 3. Jangan menempatkan seluruh backend logic dalam satu controller.
 4. Jangan melakukan query database langsung dari komponen UI.
 5. Jangan mengubah Fixed Anchor secara otomatis.
@@ -1078,20 +1197,20 @@ Seluruh implementasi harus mematuhi batasan berikut:
 
 # 18. FINAL ARCHITECTURE DEFINITION
 
-ClynSchedule menggunakan arsitektur Client-Server dengan frontend React + TypeScript, backend Node.js + Express.js menggunakan pendekatan Modular Monolith, serta PostgreSQL sebagai database utama.
+ClynSchedule menggunakan arsitektur Client-Server multi-platform dengan Web Client (React + TypeScript PWA), Mobile Client (React Native + TypeScript via Expo), serta backend Node.js + Express.js menggunakan pendekatan Modular Monolith, dengan PostgreSQL sebagai database utama.
 
 Smart Cascade Engine ditempatkan pada backend sebagai komponen domain utama yang bertanggung jawab terhadap penyesuaian jadwal melalui Ripple Shift dan Compress Duration.
 
 Fixed Anchor Protection, Conflict Detection, dan Database Transaction menjadi bagian penting untuk memastikan setiap perubahan jadwal tetap aman, konsisten, dan dapat diprediksi.
 
-IndexedDB dan Progressive Web App digunakan untuk mendukung pengalaman aplikasi yang responsif serta penggunaan data lokal.
+IndexedDB (Web) dan AsyncStorage / SQLite (Mobile) digunakan untuk mendukung pengalaman aplikasi yang responsif serta penggunaan data lokal dan offline. Expo Notifications menjamin pengingat aktivitas dapat berbunyi andal di perangkat mobile.
 
-Arsitektur ini dirancang agar cukup sederhana untuk MVP, tetapi tetap memiliki fondasi yang dapat dikembangkan untuk kebutuhan sinkronisasi, notifikasi lanjutan, analitik, dan fitur kecerdasan buatan di masa mendatang.
+Arsitektur ini dirancang agar tetap sederhana untuk MVP, namun tangguh dan siap dikembangkan untuk sinkronisasi multi-perangkat, analitik produktivitas, serta integrasi kecerdasan buatan di masa mendatang.
 
 **Prinsip arsitektur:**
 
-"Build simple. Keep it modular. Make scheduling reliable."
+"Build simple. Keep it modular. Make scheduling reliable across web and mobile."
 
 ---
 
-**END OF DOCUMENT — ClynSchedule Architecture v1.0**
+**END OF DOCUMENT — ClynSchedule Architecture v1.1**

@@ -647,7 +647,7 @@ Struktur database dapat dikembangkan untuk mendukung fitur tambahan.
 | Recurring Activities | `activity_recurrences` | Aktivitas berulang harian atau mingguan |
 | Task Dependencies | `activity_dependencies` | Hubungan ketergantungan antaraktivitas |
 | User Categories | `activity_categories` | Kategori aktivitas yang dapat dikustomisasi |
-| Push Notifications | `push_subscriptions` | Menyimpan endpoint push notification |
+| Push Notifications | `push_subscriptions` | Menyimpan endpoint Web Push dan Expo Push Token untuk notifikasi mobile |
 | Multiple Devices | `user_devices` | Mengelola perangkat pengguna |
 | Schedule Templates | `schedule_templates` | Template jadwal harian |
 | Calendar Integration | `calendar_integrations` | Integrasi kalender eksternal |

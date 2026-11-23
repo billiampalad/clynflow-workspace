@@ -26,50 +26,67 @@ Seluruh implementasi harus mengikuti teknologi yang telah ditetapkan dalam `arch
 
 | Layer | Technology |
 |---|---|
-| Frontend | React + TypeScript |
-| Build Tool | Vite |
-| Styling | Tailwind CSS |
-| Icons | Lucide React |
-| Routing | React Router |
-| Server State | TanStack Query |
-| Client State | Zustand |
-| Local Storage | IndexedDB |
-| Backend | Node.js + Express.js |
+| **Web Frontend** | React + TypeScript |
+| Web Build Tool | Vite |
+| Web Styling | Tailwind CSS |
+| Web Icons | Lucide React |
+| Web Routing | React Router |
+| Web Local Storage | IndexedDB |
+| Web PWA | vite-plugin-pwa |
+| **Mobile Frontend** | Expo (React Native + TypeScript) |
+| Mobile Navigation | Expo Router |
+| Mobile Styling | NativeWind / Tailwind CSS |
+| Mobile Icons | Lucide React Native |
+| Mobile Local Storage | AsyncStorage & Expo SQLite |
+| Mobile Push & Local Notif | Expo Notifications |
+| Mobile Haptics | Expo Haptics |
+| Mobile Build & Tooling | Expo Application Services (EAS) |
+| **Shared Client State** | Zustand (Global UI State) & TanStack Query (Server State) |
+| **Backend** | Node.js + Express.js |
 | Backend Language | TypeScript |
 | Database | PostgreSQL |
 | ORM | Prisma ORM |
 | Validation | Zod |
 | Logging | Pino |
-| Testing | Vitest |
-| PWA | vite-plugin-pwa |
+| Testing | Vitest & React Native Testing Library |
 
 ### Technology Restrictions
 
 1. Jangan menambahkan framework atau library baru tanpa alasan teknis yang jelas.
 2. Jangan menggunakan JavaScript biasa untuk modul baru jika TypeScript sudah ditetapkan.
-3. Jangan mencampurkan business logic dengan komponen UI.
-4. Jangan mengakses database secara langsung dari komponen frontend.
-5. Jangan menyimpan secret, API key, atau database credentials di frontend.
+3. Jangan mencampurkan business logic dengan komponen UI web atau mobile.
+4. Jangan mengakses database secara langsung dari komponen frontend atau mobile.
+5. Jangan menyimpan secret, API key, atau database credentials di aplikasi client.
 6. Gunakan library yang sudah tersedia sebelum membuat implementasi alternatif sendiri.
 7. Setiap penambahan dependency harus memiliki tujuan dan manfaat yang jelas.
+8. Jangan mengimpor atau menggunakan elemen DOM Web (`div`, `span`, `p`, `window`, `document`, `localStorage`) di dalam direktori `mobile/`.
 
 ---
 
 ## 3. Project Structure Rules
 
-Gunakan struktur folder modular sesuai pembagian frontend dan backend.
+Gunakan struktur direktori modular sesuai pembagian `web/`, `mobile/`, dan `backend/`.
 
-### Frontend Structure
+### Root Workspace Structure
 
 ```text
-frontend/
+clynflow-workspace/
+├── docs/                     # Dokumentasi arsitektur, PRD, rules, schema, dan design
+├── web/                      # Aplikasi Web Frontend (React + Vite PWA)
+├── mobile/                   # Aplikasi Mobile Frontend (Expo + React Native)
+└── backend/                  # Aplikasi Backend API (Node.js + Express + Prisma)
+```
+
+### Web Structure (`web/`)
+
+```text
+web/
 ├── public/
 │   ├── icons/
 │   └── manifest.json
 │
 ├── src/
 │   ├── assets/
-│   │
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── layout/
@@ -97,7 +114,52 @@ frontend/
 └── vite.config.ts
 ```
 
-### Backend Structure
+### Mobile Structure (`mobile/` - Expo)
+
+```text
+mobile/
+├── app/
+│   ├── (tabs)/
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx         # Dashboard mobile screen
+│   │   ├── schedule.tsx      # Timeline & schedule screen
+│   │   ├── history.tsx       # Riwayat perubahan & Undo
+│   │   └── settings.tsx      # Pengaturan & preferensi pengguna
+│   │
+│   ├── activity/
+│   │   ├── [id].tsx          # Form edit aktivitas
+│   │   └── create.tsx        # Form pembuatan aktivitas baru
+│   │
+│   ├── cascade-preview.tsx   # Modal sheet pratinjau Smart Cascade
+│   └── _layout.tsx           # Root provider layout
+│
+├── assets/
+│   ├── icon.png
+│   ├── splash.png
+│   └── adaptive-icon.png
+│
+├── src/
+│   ├── components/
+│   │   ├── ui/               # Button, Input, Card native
+│   │   ├── layout/           # SafeScreen, Header, BottomSheet
+│   │   ├── activity/         # ActivityCard, StatusBadge, TimerWidget
+│   │   └── schedule/         # DailyTimeline, ConflictBanner
+│   │
+│   ├── hooks/                # Custom React Native hooks
+│   ├── services/             # API client & local notification service
+│   ├── stores/               # Zustand UI stores
+│   ├── storage/              # AsyncStorage & SQLite helper
+│   ├── types/                # Shared domain interfaces
+│   └── utils/                # Date/time & schedule formatters
+│
+├── app.json
+├── babel.config.js
+├── tailwind.config.js
+├── tsconfig.json
+└── package.json
+```
+
+### Backend Structure (`backend/`)
 
 ```text
 backend/
@@ -136,17 +198,18 @@ backend/
 
 | Folder | Responsibility |
 |---|---|
-| `components/` | Reusable UI components |
-| `pages/` | Halaman utama aplikasi |
-| `hooks/` | Custom React hooks |
-| `services/` | Komunikasi dengan backend API |
-| `stores/` | Global client state |
-| `types/` | TypeScript interfaces dan types |
-| `utils/` | Helper functions |
+| `components/` | Reusable UI components (Web & Mobile native) |
+| `pages/` (Web) | Halaman utama aplikasi web |
+| `app/` (Mobile) | Screen dan routing berbasis file (Expo Router) |
+| `hooks/` | Custom hooks untuk state, sensor, network, atau data fetching |
+| `services/` | Komunikasi dengan REST API dan native services (Notifications) |
+| `stores/` | Global client UI state (Zustand) |
+| `types/` | TypeScript interfaces dan contract types |
+| `utils/` | Helper functions dan time-calculation utilities |
 | `modules/` | Backend business modules |
 | `controllers/` | Menangani HTTP request dan response |
 | `services/` | Menjalankan business logic backend |
-| `repositories/` | Mengelola akses database |
+| `repositories/` | Mengelola akses database PostgreSQL via Prisma |
 | `middlewares/` | Authentication, validation, dan error handling |
 | `prisma/` | Database schema dan migrations |
 
@@ -231,17 +294,32 @@ Gunakan shared domain types sebagai acuan antara frontend dan backend jika memun
 
 ---
 
-## 6. React and Frontend Rules
+## 6. React (Web) and React Native / Expo (Mobile) Rules
 
-### Component Rules
+### Shared Component & Business Logic Rules
 
 1. Gunakan functional components dan React Hooks.
-2. Setiap komponen harus memiliki tanggung jawab yang jelas.
-3. Pisahkan komponen yang dapat digunakan kembali.
+2. Setiap komponen harus memiliki tanggung jawab tunggal yang jelas (Single Responsibility Principle).
+3. Pisahkan komponen yang dapat digunakan kembali ke dalam folder `components/ui/` masing-masing platform.
 4. Hindari membuat satu komponen dengan terlalu banyak kondisi dan tanggung jawab.
-5. Gunakan props dengan tipe yang jelas.
-6. Hindari duplikasi UI.
-7. Jangan menempatkan business logic Smart Cascade di dalam komponen React.
+5. Gunakan props dengan tipe TypeScript yang ketat dan eksplisit.
+6. Hindari duplikasi logika bisnis; logika murni (perhitungan waktu, formatters, domain helpers) harus konsisten antara web dan mobile.
+7. Jangan pernah menempatkan business logic Smart Cascade Engine di dalam komponen UI client.
+
+### React Native & Expo Rules (Mobile)
+
+1. **Native Primitives Only:** Selalu gunakan komponen native React Native (`View`, `Text`, `Pressable`, `ScrollView`, `FlatList`) atau wrapper khusus. Dilarang keras menggunakan elemen HTML DOM (`div`, `span`, `p`, `button`, `a`) pada kode di dalam `mobile/`.
+2. **Expo Router Conventions:**
+   - Gunakan navigasi file-based Expo Router: `app/(tabs)/` untuk tab utama (`index.tsx`, `schedule.tsx`, `history.tsx`, `settings.tsx`).
+   - Gunakan nested routes untuk modal atau stack screens (misalnya `app/activity/[id].tsx` dan `app/cascade-preview.tsx`).
+   - Gunakan layout wrapper `_layout.tsx` untuk konfigurasi stack atau tab navigation.
+3. **Safe Area & Responsive Layout:** Selalu gunakan `react-native-safe-area-context` (`SafeAreaView` atau `useSafeAreaInsets`) agar konten tidak tertutup notch, dynamic island, atau navigation bar.
+4. **Haptic Feedback:** Gunakan `expo-haptics` untuk memberikan respon getaran pada interaksi penting:
+   - `Haptics.notificationAsync(NotificationFeedbackType.Success)` saat menyelesaikan aktivitas atau menerapkan Smart Cascade.
+   - `Haptics.impactAsync(ImpactFeedbackStyle.Medium)` saat toggle Fixed Anchor atau tombol Start Now.
+5. **No Web APIs:** Jangan memanggil `window`, `document`, atau `localStorage` di mobile. Gunakan `AsyncStorage` untuk key-value storage atau `Expo SQLite` untuk basis data lokal.
+6. **Icons:** Gunakan `lucide-react-native` untuk ikon pada aplikasi mobile.
+7. **Touch Targets:** Pastikan setiap tombol dan area interaktif memiliki ukuran sentuh minimum 44x44 pt.
 
 ### State Management Rules
 
@@ -249,10 +327,11 @@ Gunakan pembagian state berikut:
 
 | State Type | Tool | Usage |
 |---|---|---|
-| Server State | TanStack Query | Data aktivitas dari API |
-| Global UI State | Zustand | Modal, filter, preferensi UI sementara |
-| Local State | React useState | Input dan interaksi lokal |
-| Offline Data | IndexedDB | Cache dan perubahan lokal yang belum tersinkronisasi |
+| Server State | TanStack Query | Data aktivitas dan history jadwal dari REST API |
+| Global UI State | Zustand | Modal status, timer aktif, filter, preferensi UI sementara |
+| Local State | React useState / useReducer | Input form dan interaksi lokal komponen |
+| Offline Storage (Web) | IndexedDB | Cache data dan antrean mutasi offline PWA |
+| Offline Storage (Mobile) | AsyncStorage & Expo SQLite | Cache jadwal, token auth, dan antrean mutasi offline |
 
 Ketentuan:
 
@@ -264,14 +343,13 @@ Ketentuan:
 
 ### Styling Rules
 
-1. Gunakan Tailwind CSS sebagai sistem styling utama.
-2. Ikuti warna dan design tokens dari `design.md`.
-3. Gunakan komponen UI yang konsisten.
-4. Pastikan tampilan mobile-first dan responsif.
-5. Hindari inline styles kecuali dibutuhkan secara teknis.
-6. Hindari penggunaan warna acak di luar design system.
-7. Gunakan Lucide React untuk ikon.
-8. Pastikan kontras teks dan background mudah dibaca.
+1. **Web:** Gunakan Tailwind CSS sebagai sistem styling utama.
+2. **Mobile:** Gunakan NativeWind (Tailwind CSS untuk React Native) atau `StyleSheet` yang mematuhi design tokens dari `design.md`.
+3. Ikuti warna dan design tokens dari `design.md`.
+4. Gunakan komponen UI yang konsisten di seluruh platform.
+5. Pastikan tampilan mobile-first dan responsif.
+6. Hindari inline styles acak di luar design system.
+7. Pastikan kontras teks dan background mudah dibaca.
 
 ---
 
@@ -533,33 +611,34 @@ Keamanan harus menjadi bagian dari seluruh proses pengembangan.
 
 ---
 
-## 13. PWA and Offline Rules
+## 13. PWA, Mobile App, and Offline Rules
 
 ClynSchedule harus tetap dapat digunakan ketika koneksi internet tidak tersedia, sesuai batasan fitur offline.
 
-### PWA Rules
+### PWA Rules (Web)
 
-- Gunakan Service Worker untuk cache asset aplikasi.
-- Gunakan manifest untuk instalasi PWA.
-- Pastikan tampilan mendukung perangkat mobile.
+- Gunakan Service Worker untuk cache asset aplikasi web.
+- Gunakan manifest untuk instalasi PWA di desktop dan browser mobile.
+- Pastikan tampilan responsif dan nyaman digunakan.
 - Sediakan indikator status online dan offline.
 - Simpan perubahan lokal ke IndexedDB.
 - Sinkronkan perubahan ketika koneksi kembali tersedia.
 
+### Mobile Offline & Notification Rules (Expo)
+
+- Gunakan AsyncStorage untuk menyimpan token, preferensi, dan snapshot jadwal terbaru.
+- Gunakan Expo SQLite untuk menyimpan entitas jadwal dan antrean mutasi (mutation queue) saat perangkat offline.
+- Tampilkan banner status jaringan ketika perangkat offline.
+- Gunakan `expo-notifications` untuk menjadwalkan notifikasi pengingat lokal (local scheduled alarms) yang dieksekusi langsung oleh sistem operasi (Android AlarmManager / iOS Notification Center) sehingga tetap berdering andal meskipun aplikasi ditutup.
+- Gunakan Expo Push Service untuk notifikasi darurat atau notifikasi yang dipicu oleh backend.
+
 ### Offline Data Rules
 
-1. Jangan menganggap IndexedDB sebagai pengganti database utama.
-2. Tandai perubahan lokal yang belum tersinkronisasi.
-3. Tangani konflik ketika data lokal dan server berbeda.
-4. Gunakan ID unik agar data offline dapat dikenali saat sinkronisasi.
-5. Jangan menghapus data lokal sebelum sinkronisasi berhasil.
-
-### Notification Rules
-
-- Gunakan Web Notifications untuk notifikasi aplikasi.
-- Gunakan Web Push untuk pengingat yang membutuhkan pengiriman dari server.
-- Jangan mengandalkan `setInterval` atau timer frontend ketika aplikasi tertutup.
-- Untuk notifikasi lokal yang lebih andal pada aplikasi native, pertimbangkan Capacitor Local Notifications.
+1. Jangan menganggap IndexedDB atau AsyncStorage/SQLite sebagai pengganti database utama.
+2. Tandai perubahan lokal yang belum tersinkronisasi (`is_synced: false`).
+3. Tangani konflik ketika data lokal dan server berbeda (server authority dengan pemberitahuan ke user).
+4. Gunakan client-generated UUID agar data baru yang dibuat offline dapat dikenali saat sinkronisasi.
+5. Jangan menghapus data lokal sebelum sinkronisasi berhasil dikonfirmasi server.
 
 ---
 
@@ -569,8 +648,9 @@ Testing wajib dilakukan pada fitur inti sebelum dianggap selesai.
 
 ### Testing Tools
 
-- Vitest untuk unit testing.
-- React Testing Library untuk komponen frontend.
+- Vitest untuk unit testing backend dan web.
+- React Testing Library untuk komponen frontend web.
+- React Native Testing Library (RNTL) untuk komponen mobile Expo.
 - Supertest untuk API testing.
 - Integration testing untuk database dan cascade operations.
 
@@ -732,6 +812,8 @@ AI coding assistant tidak boleh:
 - Mengklaim test berhasil jika belum dijalankan.
 - Membuat dependency baru tanpa kebutuhan yang jelas.
 - Mengubah banyak file yang tidak berhubungan dengan tugas.
+- Mencampurkan elemen HTML DOM (`div`, `span`, `p`, `button`) ke dalam kode mobile Expo (`mobile/`).
+- Mengabaikan konvensi file-based routing Expo Router di dalam direktori `mobile/app/`.
 
 ### Expected Output
 
