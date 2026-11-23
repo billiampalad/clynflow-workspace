@@ -4,7 +4,7 @@
 
 Dokumen ini menjelaskan rancangan database untuk **ClynSchedule**, aplikasi Dynamic Time-Blocking & Smart Cascade Scheduler yang membantu pengguna mengelola aktivitas harian secara dinamis.
 
-Database dirancang menggunakan **PostgreSQL** dengan pendekatan relasional untuk memastikan konsistensi data, integritas jadwal, dan kemampuan pencatatan perubahan aktivitas.
+Database dirancang menggunakan **Supabase (PostgreSQL)** dengan pendekatan relasional untuk memastikan konsistensi data, integritas jadwal, dan kemampuan pencatatan perubahan aktivitas.
 
 ### Tujuan Database
 
@@ -19,11 +19,15 @@ Database dirancang menggunakan **PostgreSQL** dengan pendekatan relasional untuk
 
 | Komponen | Teknologi |
 |---|---|
-| Database | PostgreSQL |
+| Database Platform | Supabase (PostgreSQL) |
+| Database Engine | PostgreSQL 15+ |
+| Backend-as-a-Service (BaaS) | Supabase |
 | ORM | Prisma ORM |
 | Backend | Node.js + Express.js + TypeScript |
+| Authentication | Supabase Auth (JWT) |
+| Security | Row Level Security (RLS) & JWT verification |
 | Validation | Zod |
-| Migration | Prisma Migrate |
+| Migration | Prisma Migrate & Supabase CLI |
 | Primary Key | UUID |
 | Default Timezone | Asia/Makassar |
 
@@ -151,7 +155,7 @@ Menyimpan informasi dasar pengguna aplikasi.
 | `created_at` | TIMESTAMPTZ | NOT NULL | Waktu pembuatan akun |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | Waktu pembaruan data |
 
-**Catatan:** Jika menggunakan Supabase Auth, identitas pengguna sebaiknya menggunakan UUID dari `auth.users`. Jangan menyimpan password mentah di database aplikasi.
+**Catatan:** Karena autentikasi menggunakan Supabase Auth, kolom `id` pada tabel `users` berelasi langsung dengan UUID dari `auth.users` Supabase. Pengelolaan kata sandi dan token JWT ditangani sepenuhnya oleh Supabase Auth.
 
 ### 4.2. `activity_blocks`
 
@@ -631,7 +635,7 @@ Ketentuan keamanan database:
 4. Gunakan parameterized queries melalui Prisma ORM.
 5. Jangan menyimpan password dalam bentuk plaintext.
 6. Gunakan HTTPS untuk komunikasi client dan backend.
-7. Jika menggunakan Supabase, aktifkan Row Level Security (RLS) pada tabel yang dapat diakses langsung oleh client.
+7. Aktifkan Row Level Security (RLS) di Supabase pada seluruh tabel aplikasi (`activity_blocks`, `schedule_events`, `activity_history`, `user_preferences`) dengan policy `auth.uid() = user_id`.
 8. Simpan secret dan database credentials dalam environment variables.
 9. Batasi akses database berdasarkan prinsip least privilege.
 10. Jangan mengirim informasi sensitif ke log aplikasi.

@@ -42,9 +42,11 @@ Seluruh implementasi harus mengikuti teknologi yang telah ditetapkan dalam `arch
 | Mobile Haptics | Expo Haptics |
 | Mobile Build & Tooling | Expo Application Services (EAS) |
 | **Shared Client State** | Zustand (Global UI State) & TanStack Query (Server State) |
+| **BaaS & Platform** | Supabase (Managed PostgreSQL, Supabase Auth, RLS) |
 | **Backend** | Node.js + Express.js |
 | Backend Language | TypeScript |
-| Database | PostgreSQL |
+| Database | PostgreSQL (Supabase) |
+| Authentication | Supabase Auth (JWT) |
 | ORM | Prisma ORM |
 | Validation | Zod |
 | Logging | Pino |
@@ -607,7 +609,7 @@ Keamanan harus menjadi bagian dari seluruh proses pengembangan.
 9. Gunakan secure cookie settings jika autentikasi berbasis cookie.
 10. Cegah akses data lintas pengguna.
 11. Terapkan CORS sesuai domain aplikasi.
-12. Gunakan Row Level Security jika Supabase digunakan dan client mengakses database secara langsung.
+12. Terapkan Row Level Security (RLS) di Supabase dan verifikasi token JWT Supabase Auth pada middleware backend Express untuk mencegah akses data lintas pengguna.
 
 ---
 

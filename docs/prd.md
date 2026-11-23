@@ -405,9 +405,9 @@ Fitur:
 | Programming Language | TypeScript | Menjaga konsistensi tipe data di seluruh platform |
 | Backend Runtime | Node.js | Menjalankan backend |
 | Backend Framework | Express.js | Menyediakan REST API |
-| Database | PostgreSQL | Menyimpan data aplikasi |
-| Authentication | Supabase Auth (opsional) | Autentikasi pengguna |
-| Database Hosting | Supabase (opsional) | Menyediakan layanan PostgreSQL terkelola |
+| Database Platform | Supabase (PostgreSQL) | Menyimpan data aplikasi pada database PostgreSQL terkelola |
+| Authentication | Supabase Auth | Autentikasi pengguna dan pengelolaan session berbasis JWT |
+| Backend-as-a-Service (BaaS) | Supabase | Menyediakan managed PostgreSQL, Auth, dan Row Level Security (RLS) |
 | Local Storage Web | IndexedDB | Menyimpan data lokal web untuk dukungan offline |
 | Local Storage Mobile | AsyncStorage / Expo SQLite | Menyimpan data lokal dan antrean offline pada mobile |
 | PWA | Vite PWA Plugin | Mendukung instalasi aplikasi web |

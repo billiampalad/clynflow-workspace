@@ -102,7 +102,7 @@ Seluruh arsitektur ClynSchedule harus mengikuti prinsip berikut:
 | TypeScript | Bahasa pemrograman backend |
 | Zod | Validasi request dan data |
 | Prisma ORM | Interaksi database |
-| PostgreSQL | Database utama |
+| PostgreSQL (Supabase) | Database utama terkelola (Managed Database) |
 | Pino | Logging aplikasi |
 | Vitest | Unit dan integration testing |
 
@@ -110,7 +110,7 @@ Seluruh arsitektur ClynSchedule harus mengikuti prinsip berikut:
 
 | Teknologi | Fungsi |
 |---|---|
-| Supabase | Hosting PostgreSQL dan layanan autentikasi opsional |
+| Supabase | Platform BaaS penyedia PostgreSQL terkelola, Supabase Auth, dan Row Level Security (RLS) |
 | IndexedDB & AsyncStorage | Penyimpanan lokal web dan mobile |
 | Service Worker | Cache aplikasi dan dukungan offline pada web |
 | Expo Application Services (EAS) | Build, deployment, dan update aplikasi mobile |
@@ -127,10 +127,10 @@ ClynSchedule menggunakan kombinasi teknologi di atas dengan alasan:
 - TypeScript digunakan di seluruh layer (Web, Mobile, Backend) untuk konsistensi tipe data dan kemudahan berbagi kontrak skema.
 - Expo Router menyederhanakan arsitektur navigasi mobile dengan konsep file-based routing yang selaras dengan mental model pengembangan modern.
 - Express.js menyediakan struktur backend yang sederhana dan fleksibel.
-- PostgreSQL mendukung relasi data dan transaksi yang dibutuhkan penjadwalan.
-- Prisma membantu pengelolaan database dan migration.
+- PostgreSQL yang di-host di Supabase mendukung relasi data dan transaksi yang dibutuhkan penjadwalan.
+- Prisma membantu pengelolaan database dan migration secara type-safe.
 - IndexedDB (Web) dan AsyncStorage / Expo SQLite (Mobile) mendukung penyimpanan lokal untuk reliabilitas offline.
-- Supabase dapat digunakan untuk mengurangi kompleksitas pengelolaan infrastruktur database dan autentikasi.
+- Supabase menjadi solusi BaaS utama untuk database PostgreSQL terkelola, manajemen autentikasi (Supabase Auth), serta proteksi data via Row Level Security (RLS).
 
 Redis, BullMQ, dan AI API tidak menjadi dependensi MVP.
 
@@ -973,16 +973,16 @@ Pada aplikasi mobile berbasis Expo, pengingat memiliki keandalan tinggi melalui 
 
 ## 12.1 Authentication
 
-Jika aplikasi menggunakan akun pengguna, autentikasi dapat menggunakan Supabase Auth.
+Autentikasi pengguna dikelola secara terpusat menggunakan **Supabase Auth**. Client (Web dan Mobile) melakukan login/register menggunakan Supabase client SDK, dan token JWT Supabase dikirimkan pada header `Authorization: Bearer <token>` ke backend Express.
 
-Backend harus memverifikasi token sebelum mengizinkan akses ke data pribadi.
+Backend memverifikasi keabsahan JWT Supabase sebelum mengizinkan akses ke data dan endpoint private.
 
 ## 12.2 Authorization
 
-- Pengguna hanya dapat mengakses aktivitas miliknya.
-- Setiap query harus mempertimbangkan userId.
-- ID aktivitas tidak boleh menjadi satu-satunya dasar otorisasi.
-- Endpoint yang mengubah jadwal harus memeriksa kepemilikan data.
+- Pengguna hanya dapat mengakses aktivitas miliknya (`user_id` matching).
+- Setiap query database pada backend memfilter berdasarkan `userId` terverifikasi.
+- Pada level database Supabase, Row Level Security (RLS) diaktifkan untuk memastikan proteksi akses ganda.
+- Endpoint yang mengubah jadwal memeriksa kepemilikan data sebelum menjalankan operasi.
 
 ## 12.3 Input Validation
 
@@ -1165,7 +1165,7 @@ Keputusan arsitektur berikut menjadi acuan awal proyek.
 | ADR-001 | React + TypeScript | UI web modular dan type safety |
 | ADR-002 | Node.js + Express.js | Backend sederhana, cepat, dan fleksibel |
 | ADR-003 | Modular Monolith | Menghindari kompleksitas microservices pada MVP |
-| ADR-004 | PostgreSQL | Relasi data dan transaksi yang kuat untuk penjadwalan |
+| ADR-004 | PostgreSQL (Supabase) | Relasi data, transaksi ACID kuat, serta platform BaaS terkelola dengan Supabase Auth & RLS |
 | ADR-005 | Prisma ORM | Pengelolaan query type-safe dan migration terstruktur |
 | ADR-006 | Smart Cascade di backend | Konsistensi aturan dan validasi penjadwalan otoritatif |
 | ADR-007 | IndexedDB & AsyncStorage | Dukungan penyimpanan lokal dan offline untuk web dan mobile |
@@ -1197,11 +1197,11 @@ Seluruh implementasi harus mematuhi batasan berikut:
 
 # 18. FINAL ARCHITECTURE DEFINITION
 
-ClynSchedule menggunakan arsitektur Client-Server multi-platform dengan Web Client (React + TypeScript PWA), Mobile Client (React Native + TypeScript via Expo), serta backend Node.js + Express.js menggunakan pendekatan Modular Monolith, dengan PostgreSQL sebagai database utama.
+ClynSchedule menggunakan arsitektur Client-Server multi-platform dengan Web Client (React + TypeScript PWA), Mobile Client (React Native + TypeScript via Expo), backend Node.js + Express.js menggunakan pendekatan Modular Monolith, serta PostgreSQL yang di-host melalui **Supabase** sebagai database utama dan penyedia layanan autentikasi (Supabase Auth).
 
 Smart Cascade Engine ditempatkan pada backend sebagai komponen domain utama yang bertanggung jawab terhadap penyesuaian jadwal melalui Ripple Shift dan Compress Duration.
 
-Fixed Anchor Protection, Conflict Detection, dan Database Transaction menjadi bagian penting untuk memastikan setiap perubahan jadwal tetap aman, konsisten, dan dapat diprediksi.
+Fixed Anchor Protection, Conflict Detection, dan Database Transaction menjadi bagian penting untuk memastikan setiap perubahan jadwal tetap aman, konsisten, dan dapat diprediksi. Proteksi keamanan diperkuat dengan Supabase Row Level Security (RLS).
 
 IndexedDB (Web) dan AsyncStorage / SQLite (Mobile) digunakan untuk mendukung pengalaman aplikasi yang responsif serta penggunaan data lokal dan offline. Expo Notifications menjamin pengingat aktivitas dapat berbunyi andal di perangkat mobile.
 
@@ -1209,7 +1209,7 @@ Arsitektur ini dirancang agar tetap sederhana untuk MVP, namun tangguh dan siap 
 
 **Prinsip arsitektur:**
 
-"Build simple. Keep it modular. Make scheduling reliable across web and mobile."
+"Build simple. Keep it modular. Make scheduling reliable across web and mobile with Supabase foundation."
 
 ---
 
